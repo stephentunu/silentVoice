@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, Shield, Users, Lock, Heart } from 'lucide-react';
+import { Shield, Users, Lock, Heart, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Logo } from '@/components/Logo';
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -28,10 +29,7 @@ export default function Landing() {
       
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-4 py-4 md:px-8 lg:px-12">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-7 w-7 md:h-8 md:w-8 text-primary" />
-          <span className="text-lg md:text-xl font-bold text-foreground">SilentVoice</span>
-        </div>
+        <Logo size="md" />
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -204,10 +202,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-border/50 px-4 md:px-8 py-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
-            <span className="text-sm font-semibold text-foreground">SilentVoice</span>
-          </div>
+          <Logo size="sm" />
           <p className="text-xs text-muted-foreground">
             © 2026 SilentVoice. Empowering every voice.
           </p>
