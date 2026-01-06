@@ -16,8 +16,7 @@ const authSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { signIn, signUp, user, isLoading } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn, user, isLoading, isAdmin, isAdminLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -25,10 +24,10 @@ export default function Auth() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user && !isLoading && !isAdminLoading && isAdmin) {
       navigate('/dashboard');
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, isAdmin, isAdminLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,25 +47,12 @@ export default function Auth() {
     setIsSubmitting(true);
     
     try {
-      if (isSignUp) {
-        const { error } = await signUp(email, password);
-        if (error) {
-          if (error.message.includes('already registered')) {
-            toast.error('This email is already registered. Please sign in instead.');
-          } else {
-            toast.error(error.message);
-          }
+      const { error } = await signIn(email, password);
+      if (error) {
+        if (error.message.includes('Invalid login')) {
+          toast.error('Invalid email or password. Please try again.');
         } else {
-          toast.success('Account created successfully! Redirecting...');
-        }
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) {
-          if (error.message.includes('Invalid login')) {
-            toast.error('Invalid email or password. Please try again.');
-          } else {
-            toast.error(error.message);
-          }
+          toast.error(error.message);
         }
       }
     } finally {
@@ -74,7 +60,7 @@ export default function Auth() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isAdminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -102,12 +88,10 @@ export default function Auth() {
           </div>
 
           <h1 className="text-2xl font-bold text-center text-foreground mb-2">
-            {isSignUp ? 'Create Admin Account' : 'Admin Login'}
+            Admin Login
           </h1>
           <p className="text-muted-foreground text-center mb-8">
-            {isSignUp 
-              ? 'Sign up to start moderating meetings' 
-              : 'Sign in to access your dashboard'}
+            Sign in to access your dashboard
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -157,22 +141,10 @@ export default function Auth() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
+              {isSubmitting ? 'Please wait...' : 'Sign In'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setErrors({});
-              }}
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </button>
-          </div>
         </div>
       </main>
     </div>
