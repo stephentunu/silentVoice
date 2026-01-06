@@ -53,7 +53,7 @@ interface Submission {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { user, isLoading, isAdmin, signOut } = useAuth();
+  const { user, isLoading, isAdmin, isAdminLoading, signOut } = useAuth();
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [participantCount, setParticipantCount] = useState(0);
@@ -62,10 +62,10 @@ export default function AdminDashboard() {
   const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && (!user || !isAdmin)) {
+    if (!isLoading && !isAdminLoading && (!user || !isAdmin)) {
       navigate('/auth');
     }
-  }, [user, isLoading, isAdmin, navigate]);
+  }, [user, isLoading, isAdmin, isAdminLoading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -289,7 +289,7 @@ export default function AdminDashboard() {
     ? `${window.location.origin}/room/${activeMeeting.code}`
     : '';
 
-  if (isLoading) {
+  if (isLoading || isAdminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
