@@ -49,18 +49,21 @@ export type Database = {
       }
       participants: {
         Row: {
+          display_name: string | null
           id: string
           joined_at: string
           meeting_id: string
           session_token: string
         }
         Insert: {
+          display_name?: string | null
           id?: string
           joined_at?: string
           meeting_id: string
           session_token: string
         }
         Update: {
+          display_name?: string | null
           id?: string
           joined_at?: string
           meeting_id?: string

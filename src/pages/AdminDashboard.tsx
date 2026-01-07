@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [participantCount, setParticipantCount] = useState(0);
+  const [totalUsersCount, setTotalUsersCount] = useState(0);
   const [meetingTitle, setMeetingTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -85,7 +86,27 @@ export default function AdminDashboard() {
       }
     };
 
+    // Fetch total unique users across all meetings for this admin
+    const fetchTotalUsers = async () => {
+      // Get all meetings for this admin
+      const { data: meetings } = await supabase
+        .from('meetings')
+        .select('id')
+        .eq('admin_id', user.id);
+
+      if (meetings && meetings.length > 0) {
+        const meetingIds = meetings.map(m => m.id);
+        const { count } = await supabase
+          .from('participants')
+          .select('session_token', { count: 'exact', head: true })
+          .in('meeting_id', meetingIds);
+
+        setTotalUsersCount(count || 0);
+      }
+    };
+
     fetchActiveMeeting();
+    fetchTotalUsers();
   }, [user]);
 
   useEffect(() => {
@@ -398,7 +419,21 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Stats Cards */}
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-4 gap-4">
+              <Card className="glass-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-accent/10">
+                      <Users className="h-6 w-6 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-foreground">{totalUsersCount}</p>
+                      <p className="text-sm text-muted-foreground">Total Users</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card className="glass-card">
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
@@ -407,7 +442,7 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-foreground">{participantCount}</p>
-                      <p className="text-sm text-muted-foreground">Participants</p>
+                      <p className="text-sm text-muted-foreground">Meeting Participants</p>
                     </div>
                   </div>
                 </CardContent>
