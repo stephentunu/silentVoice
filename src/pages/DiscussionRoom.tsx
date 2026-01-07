@@ -18,6 +18,8 @@ interface Submission {
   upvotes: number;
   is_pinned: boolean;
   created_at: string;
+  session_token: string | null;
+  participant_name?: string | null;
 }
 
 const submissionTypes: { value: SubmissionType; label: string; color: string }[] = [
@@ -76,7 +78,30 @@ export default function DiscussionRoom() {
         .order('created_at', { ascending: false });
 
       if (data) {
-        setSubmissions(data as Submission[]);
+        // Fetch participant names for submissions
+        const sessionTokens = [...new Set(data.map(s => s.session_token).filter(Boolean))];
+        
+        let participantMap: Record<string, string> = {};
+        if (sessionTokens.length > 0) {
+          const { data: participants } = await supabase
+            .from('participants')
+            .select('session_token, display_name')
+            .in('session_token', sessionTokens);
+          
+          if (participants) {
+            participantMap = participants.reduce((acc, p) => {
+              acc[p.session_token] = p.display_name || 'Anonymous';
+              return acc;
+            }, {} as Record<string, string>);
+          }
+        }
+        
+        const submissionsWithNames = data.map(s => ({
+          ...s,
+          participant_name: s.session_token ? participantMap[s.session_token] || 'Anonymous' : 'Anonymous'
+        }));
+        
+        setSubmissions(submissionsWithNames as Submission[]);
       }
     };
 
@@ -128,6 +153,7 @@ export default function DiscussionRoom() {
         meeting_id: meetingId,
         content: content.trim(),
         type: selectedType,
+        session_token: sessionToken,
       });
 
       if (error) {
@@ -316,9 +342,14 @@ function SubmissionCard({
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <Badge variant="secondary" className="mb-2 text-xs">
-            {typeInfo?.label}
-          </Badge>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="secondary" className="text-xs">
+              {typeInfo?.label}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              by {submission.participant_name || 'Anonymous'}
+            </span>
+          </div>
           <p className="text-foreground whitespace-pre-wrap break-words">
             {submission.content}
           </p>
@@ -327,10 +358,9 @@ function SubmissionCard({
           variant={hasVoted ? 'default' : 'outline'}
           size="sm"
           onClick={() => onVote(submission.id)}
-          className="shrink-0 gap-1"
-          disabled={hasVoted}
+          className={`shrink-0 gap-1 transition-all ${hasVoted ? 'bg-primary text-primary-foreground' : ''}`}
         >
-          <ThumbsUp className="h-4 w-4" />
+          <ThumbsUp className={`h-4 w-4 ${hasVoted ? 'fill-current' : ''}`} />
           <span>{submission.upvotes}</span>
         </Button>
       </div>

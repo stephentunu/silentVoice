@@ -111,6 +111,7 @@ export type Database = {
           is_hidden: boolean | null
           is_pinned: boolean | null
           meeting_id: string
+          session_token: string | null
           type: Database["public"]["Enums"]["submission_type"]
           upvotes: number | null
         }
@@ -121,6 +122,7 @@ export type Database = {
           is_hidden?: boolean | null
           is_pinned?: boolean | null
           meeting_id: string
+          session_token?: string | null
           type?: Database["public"]["Enums"]["submission_type"]
           upvotes?: number | null
         }
@@ -131,6 +133,7 @@ export type Database = {
           is_hidden?: boolean | null
           is_pinned?: boolean | null
           meeting_id?: string
+          session_token?: string | null
           type?: Database["public"]["Enums"]["submission_type"]
           upvotes?: number | null
         }
