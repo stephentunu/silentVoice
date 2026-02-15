@@ -105,6 +105,7 @@ export type Database = {
       }
       submissions: {
         Row: {
+          audio_url: string | null
           content: string
           created_at: string
           id: string
@@ -116,6 +117,7 @@ export type Database = {
           upvotes: number | null
         }
         Insert: {
+          audio_url?: string | null
           content: string
           created_at?: string
           id?: string
@@ -127,6 +129,7 @@ export type Database = {
           upvotes?: number | null
         }
         Update: {
+          audio_url?: string | null
           content?: string
           created_at?: string
           id?: string

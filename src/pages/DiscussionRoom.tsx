@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, ThumbsUp, Pin, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Send, ThumbsUp, Pin, MessageCircle, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { supabase } from '@/integrations/supabase/client';
 import { getSessionToken } from '@/lib/session';
 import { toast } from 'sonner';
@@ -20,6 +21,7 @@ interface Submission {
   created_at: string;
   session_token: string | null;
   participant_name?: string | null;
+  audio_url?: string | null;
 }
 
 const submissionTypes: { value: SubmissionType; label: string; color: string }[] = [
@@ -306,14 +308,25 @@ export default function DiscussionRoom() {
               className="resize-none min-h-[60px]"
               disabled={meetingStatus === 'paused'}
             />
-            <Button
-              onClick={handleSubmit}
-              disabled={!content.trim() || isSubmitting || meetingStatus === 'paused'}
-              size="icon"
-              className="h-auto aspect-square"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={handleSubmit}
+                disabled={!content.trim() || isSubmitting || meetingStatus === 'paused'}
+                size="icon"
+                className="h-auto aspect-square flex-1"
+              >
+                <Send className="h-5 w-5" />
+              </Button>
+              {meetingId && (
+                <VoiceRecorder
+                  meetingId={meetingId}
+                  sessionToken={sessionToken}
+                  selectedType={selectedType}
+                  disabled={meetingStatus === 'paused'}
+                  onRecorded={() => {}}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -333,6 +346,27 @@ function SubmissionCard({
   isPinned?: boolean;
 }) {
   const typeInfo = submissionTypes.find((t) => t.value === submission.type);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useState<HTMLAudioElement | null>(null);
+
+  const toggleAudio = () => {
+    if (!submission.audio_url) return;
+    
+    let audio = audioRef[0];
+    if (!audio) {
+      audio = new Audio(submission.audio_url);
+      audioRef[1](audio);
+      audio.onended = () => setIsPlaying(false);
+    }
+    
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
 
   return (
     <div
@@ -350,9 +384,21 @@ function SubmissionCard({
               by {submission.participant_name || 'Anonymous'}
             </span>
           </div>
-          <p className="text-foreground whitespace-pre-wrap break-words">
-            {submission.content}
-          </p>
+          {submission.audio_url ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleAudio}
+              className="gap-2"
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {isPlaying ? 'Pause' : 'Play'} voice message
+            </Button>
+          ) : (
+            <p className="text-foreground whitespace-pre-wrap break-words">
+              {submission.content}
+            </p>
+          )}
         </div>
         <Button
           variant={hasVoted ? 'default' : 'outline'}
